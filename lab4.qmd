@@ -376,9 +376,40 @@ The null hypothesis that the variance of each group is equal and that this is no
 
 **3.** Test the correlation between body length (snout to fork length) and body mass for *Cutthroat trout*. (Hint: run `?and_vertebrates` to find which length variable represents snout to fork length) (10 pts.)
 ```{r}
+#which lenth variable represents snout to fork length
+?and_vertebrates    
+#= length_1_mm
+
+#select and clean data
+cutthroat_clean <- and_vertebrates |> 
+  filter(species == "Cutthroat trout") |> 
+  drop_na(length_1_mm, weight_g)
+
+# statistically test if a variable fits a normal distribution with the shapiro.test(). can only work with 5000 or less samples
+
+#The null hypothesis of the Shapiro-Wilk normality test is that the variable is normally distributed
+t<- cutthroat_clean |> 
+  slice_sample(n = 5000) 
+
+shapiro.test(t$length_1_mm)
+
+shapiro.test(t$weight_g)
 
 ```
+Both of the cutthroat trout weight_g and length_1_mm variables have a small p-value of less than .05 (<2.2e-16 for both).This suggests that the data won't fit a normal distribution. The next step is to transform the variables or use a non-parametric test.
 
+```{r}
+#view if normal distribution with log transformation first
+ggarrange(
+ gghistogram(log(cutthroat_clean$length_1_mm), title = "Length"), 
+ gghistogram(log(cutthroat_clean$weight_g), title = "Weight") )
+```
+The log transformation doesn't present a normal distribution on the histogram plot, but instead a bimodal one. It's best to move forward with a a spearman correlation test, which works with non-parametric/ non-linear data.
+
+```{r}
+cor.test(cutthroat_clean$length_1_mm, cutthroat_clean$weight_g, method = "spearman")
+```
+These results show that there is a strong postive correlation between cutthroat trout length and weight. The pvalue (<2.2e-16) is less than .05 which signals a significant relationship between the two variables. The correlation efficient (.99) is also high and verifies the relationship. As the length of the cutthroat trout increases, so does the weight.
 
 <br> <br>
 
