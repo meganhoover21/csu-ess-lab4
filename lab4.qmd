@@ -59,6 +59,7 @@ remotes::install_github("lter/lterdatasampler")
 Now load in the libraries needed for this lab:
 
 ```{r}
+install.packages("car")
 library(tidyverse)
 library(ggpubr)
 library(lterdatasampler)
@@ -409,7 +410,7 @@ The log transformation doesn't present a normal distribution on the histogram pl
 ```{r}
 cor.test(cutthroat_clean$length_1_mm, cutthroat_clean$weight_g, method = "spearman")
 ```
-These results show that there is a strong postive correlation between cutthroat trout length and weight. The pvalue (<2.2e-16) is less than .05 which signals a significant relationship between the two variables. The correlation efficient (.99) is also high and verifies the relationship. As the length of the cutthroat trout increases, so does the weight.
+These results show that there is a strong positive correlation between cutthroat trout length and weight. The pvalue (<2.2e-16) is less than .05 which signals a significant relationship between the two variables. The correlation efficient (.99) is also high and verifies the relationship. As the length of the cutthroat trout increases, so does the weight.
 
 <br> <br>
 
@@ -476,21 +477,21 @@ pie_crab |>
   theme(legend.postition = "none")
 ```
 
-In doing this, it ;ooks like there are differences among sites, tempting us to test for statistical significance with the ANOVA test.
+In doing this, it looks like there are differences among sites, tempting us to test for statistical significance with the ANOVA test.
 
 ## Assumptions
 
 ***Normality***
 
-ANOVA assumes normal distributions within each group. We can utlize out nest/map approach to assess the normality of our data. We will use the Shapiro-Wilk normality test, which is a good test for small sample sizes.
+ANOVA assumes normal distributions within each group. We can utilize out nest/map approach to assess the normality of our data. We will use the Shapiro-Wilk normality test, which is a good test for small sample sizes.
 
 ```{r}
 norms <- pie_crab |> 
-  nest(data = -site) |>
-  mutate(Shapiro = map(data, ~ shapiro.test(.x$size)),
-         n = map_dbl(data, nrow),
+  nest(data = -site) |> #the data is being grouped by all columns except for site. The result is a new column data that contains a nested data frame for each site.
+  mutate(Shapiro = map(data, ~ shapiro.test(.x$size)), #This applies the Shapiro-Wilk test (shapiro.test) for normality to the size variable within each nested dataset. map() used to apply a function to each element of a list. Here, it applies the shapiro.test() function to each data column (which contains nested datasets) and performs the test on the size variable.
+         n = map_dbl(data, nrow),#This calculates the number of rows (sample size) in each nested dataset (each group of site) and stores it in the n column. map_dbl() is a variation of map() that ensures the result is returned as a numeric vector.
          glance_shapiro = map(Shapiro, broom::glance)) |>
-  unnest(glance_shapiro)
+  unnest(glance_shapiro) #The glance() function extracts useful summary statistics from the test result object, such as the test statistic, p-value, and other information, and stores it in a tidy format.
 
 flextable::flextable(dplyr::select(norms, site, n, statistic, p.value)) |>
   flextable::set_caption("Shapiro-Wilk normality test for size at each site")
@@ -601,7 +602,7 @@ Now that we fit this model, we can use it to predict crab size at different lati
 ```{r}
 new_lat <- data.frame(latitude = c(32, 36, 38))
 
-broom::augment(pie_lm, newdata = new_lat)
+broom::augment(pie_lm, newdata = new_lat) #adding in info
 ```
 
 ## Multiple Linear Regression
@@ -633,10 +634,34 @@ In your assignment, you will perform a multiple linear regression using variable
 ## Exercises: Part 2
 
 1.  **After** completing the ANOVA test (and post-hoc Tukey's HSD) above to test for significant differences in crab size among 3 different sites: **1)** Create a boxplot showing the carapace width for each site where sites are *ordered by latitude* and **2)** report the findings of the statistical test as you would in a scientific paper. *Include both the code to create the boxplot and an image of the figure.* (10 pts.)
+```{r}
+#use the distinct() function to ensure that we only consider one row per site for ordering.
+
+#Reorder 'site' based on 'latitude' and ensure unique levels for 'site'
+pie_crab1 <- pie_crab %>%
+  distinct(site, .keep_all = TRUE) %>%   # Ensure only one row per site
+  mutate(site = factor(site, levels = pie_crab$site[order(pie_crab$latitude)]))
+
+# Create the boxplot
+ggplot(pie_crab1, aes(x = site, y = size, fill = site)) +
+  geom_boxplot() +
+  labs(title = "Carapace Width by Site (Ordered by Latitude)",
+       x = "Site", y = "Carapace Width (mm)") +
+  theme_minimal()
+```
+
 
 2.  Conduct a simple linear regression for the effect of `water_temp_sd` (a measure reflecting annual variation in water temperature) on carapace width. Report your findings (include code *and* a sentence reporting the results) AND create a plot with a line of best fit. *Include both the code to create the plot and an image of the figure*. (10 pts).
+```{r}
+
+```
+
 
 3.  Conduct a multiple linear regression for the effects of `latitude`, `air_temp_sd`, and `water_temp_sd` on carapace width. **First** check for correlations among the three predictor variables (and report the correlation table) and **second** report your findings from the multiple linear regression (code *and* a sentence reporting the results). (10 pts.)
+```{r}
+
+```
+
 
 ## Acknowledgements
 
