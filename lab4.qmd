@@ -22,7 +22,7 @@ library(tidyverse)
 ```{r}
 #| echo: false
 #| out.width: "100%"
-knitr::include_graphics('images/LTER-Network-Logo-2017.jpg')
+#knitr::include_graphics('images/LTER-Network-Logo-2017.jpg')
 ```
 
 This lab will walk us through some basic statistical tests in R, including chi-square, t-tests, and correlation tests. We will use data from the Long-Term Ecological Research (LTER) Network, which is a collaborative effort involving more than 2000 scientists and students investigating ecological processes over long temporal and broad spatial scales. The basics of this lab were adopted from a previous version of this course. This qmd for this lab can be downloaded [here](). Please download it into the repo of your choice and open it in RStudio to work through this lab:
@@ -59,7 +59,6 @@ remotes::install_github("lter/lterdatasampler")
 Now load in the libraries needed for this lab:
 
 ```{r}
-install.packages("car")
 library(tidyverse)
 library(ggpubr)
 library(lterdatasampler)
@@ -652,18 +651,41 @@ ggplot(pie_sites1, aes(x = site, y = size, fill = site)) +
   theme(legend.position = "none")
 ```
 
+Within the pie_crab data set, we looked at Fiddler crab body size to check for significant differences in carapace width (size) across three different sites of GTM, DB, and PIE. Within each site there is a different latitude that corresponds with it.To test for significant differences between the size and site an ANOVA test was performed. This test revealed that at least one of the group means was significantly different from the others with a p-value of 2e-16. To check which pairs of sites were significantly different from each other the Tukey's HSD post-hoc was used. The results of that test showed that the greatest difference between carapace width (size) between sites was greatest between GTM and PIE with a diff value of 6.100714.
+
 
 2.  Conduct a simple linear regression for the effect of `water_temp_sd` (a measure reflecting annual variation in water temperature) on carapace width. Report your findings (include code *and* a sentence reporting the results) AND create a plot with a line of best fit. *Include both the code to create the plot and an image of the figure*. (10 pts).
 ```{r}
+# Perform the simple linear regression
+pie_lm_watert<- lm(size ~ water_temp_sd, data = pie_crab)
 
+# View the results of the linear model
+summary(pie_lm_watert)
+
+#plot with line of best fit
+pie_crab %>%
+  ggscatter(x = 'water_temp_sd', y = 'size', 
+            alpha = .35, 
+            add = "reg.line")
 ```
+
+In a linear model prediction between the water temperature and crab size, the pvalue (.528) shows that the water temperature doesn't have a significant impact on crab size. The linear regression model also shows the same result.
 
 
 3.  Conduct a multiple linear regression for the effects of `latitude`, `air_temp_sd`, and `water_temp_sd` on carapace width. **First** check for correlations among the three predictor variables (and report the correlation table) and **second** report your findings from the multiple linear regression (code *and* a sentence reporting the results). (10 pts.)
 ```{r}
+#multiple linear regression model.
+#with multiple regression, one of the assumptions is that there is no correlation between the predictor variables.
+pie_lm2 <- lm(size ~ latitude + air_temp_sd + water_temp_sd, data = pie_crab)
 
+summary(pie_lm2)
+
+#test for correlations among more than two variables with the cor() function
+pie_crab %>%
+  dplyr::select(latitude, air_temp_sd, water_temp_sd) %>%
+  cor()
 ```
-
+The multiple linear regression model between the three predictor variables suggests that there is a significant impact of the combination of the predictors on the crab size with an overall p-value <2.2e-16. However, water_temp_sd appears to not have a significant impact.
 
 ## Acknowledgements
 
