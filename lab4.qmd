@@ -3,7 +3,7 @@ title: 'Lab 4: LTER Network Data'
 author: 'Megan Hoover'
 format:
    html:
-    code-fold: true
+    self-contained: true
     toc: true
 subtitle: 'Introduction to Statistics in R'
 ---
